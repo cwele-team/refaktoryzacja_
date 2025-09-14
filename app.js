@@ -286,7 +286,7 @@ async function ensureCategoriesLoaded() {
       const watchlistText = 'Dodaj do listy';
 
       return `
-        <div class="movie-card" data-movie-id="${index}" tabindex="0" role="button" aria-label="Otwórz szczegóły filmu ${movie.title}">
+        <div class="movie-card" data-movie-id="${index}" data-movie-db-id="${movie.id}" tabindex="0" role="button" aria-label="Otwórz szczegóły filmu ${movie.title}">
           <img src="${movie.imageUrl}" alt="Plakat filmu ${movie.title}">
           <div class="movie-card-overlay"></div>
           <span class="movie-category">${primaryCategory}</span>
@@ -1058,10 +1058,11 @@ async function ensureCategoriesLoaded() {
 
           const movieId = parseInt(card.dataset.movieId);
           const movieData = movies[movieId];
+          const movieDbId = movieData.id; // Get the actual database ID
           const inWatchlist = await isInWatchlist(movieId);
 
           overlay.innerHTML = `
-            <div class="movie-details-content" data-movie-id="${movieId}">
+            <div class="movie-details-content" data-movie-id="${movieId}" data-movie-db-id="${movieDbId}">
               <button class="movie-details-close" aria-label="Zamknij szczegóły filmu">
                 <i data-lucide="x"></i>
               </button>
@@ -1088,6 +1089,10 @@ async function ensureCategoriesLoaded() {
                       <i data-lucide="${inWatchlist ? 'check' : 'plus'}"></i>
                       <span>${inWatchlist ? (inWatchlist ? 'Usuń z listy' : 'Dodaj do listy') : 'Dodaj do listy'}</span>
                     </button>
+                     <button class="btn btn-secondary purchase-button" data-movie-db-id="${movieDbId}" aria-label="Wykup dostęp do filmu ${movieData.title}">
+                       <i data-lucide="credit-card"></i>
+                       <span>Wykup dostęp</span>
+                     </button>
                      <a href="biuro_licencyjne.php" class="btn btn-secondary" aria-label="Zgłoś się po licencję do filmu ${movieData.title}">
                       <i data-lucide="briefcase"></i>
                       <span>Zgłoś się po licencję</span>
@@ -1110,6 +1115,33 @@ async function ensureCategoriesLoaded() {
           // Focus the close button for keyboard users
           const closeButton = overlay.querySelector('.movie-details-close');
           closeButton.focus();
+
+          // Setup purchase button functionality
+          const purchaseButton = overlay.querySelector('.purchase-button');
+          if (purchaseButton) {
+            purchaseButton.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              const dbMovieId = purchaseButton.getAttribute('data-movie-db-id');
+              console.log('Purchase button clicked for database movie ID:', dbMovieId);
+              
+              // Create form and submit to startPaymentExample.php
+              const form = document.createElement('form');
+              form.action = 'startPaymentExample.php';
+              form.method = 'POST';
+              form.style.display = 'none';
+
+              const movieIdInput = document.createElement('input');
+              movieIdInput.type = 'hidden';
+              movieIdInput.name = 'movieId';
+              movieIdInput.value = dbMovieId;
+              form.appendChild(movieIdInput);
+
+              document.body.appendChild(form);
+              form.submit();
+            };
+          }
 
           // Setup watchlist button functionality
           const watchlistButton = overlay.querySelector('.watchlist-button');

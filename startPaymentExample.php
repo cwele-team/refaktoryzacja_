@@ -32,17 +32,29 @@
 
     $movieId = intval($_POST['movieId']);
     $userId = $sessionData['id'];
+    
+    // Debug logging
+    error_log("Payment request - MovieID: $movieId, UserID: $userId");
 
     // Pobierz typ licencji z tabeli Filmy
-    $stmtMovie = $conn->prepare("SELECT typ_licencji FROM Filmy WHERE id = ?");
+    $stmtMovie = $conn->prepare("SELECT id, tytul, typ_licencji FROM Filmy WHERE id = ?");
     $stmtMovie->bind_param("i", $movieId);
     $stmtMovie->execute();
     $resultMovie = $stmtMovie->get_result();
 
     if (!$movie = $resultMovie->fetch_assoc()) {
-        die('Film nie znaleziony.');
+        error_log("Movie not found for ID: $movieId");
+        die('Film nie znaleziony. ID: ' . $movieId);
     }
+    
+    error_log("Found movie: " . $movie['tytul'] . " (ID: " . $movie['id'] . ")");
+    
     $licenseTypeId = $movie['typ_licencji'];
+    
+    if (!$licenseTypeId) {
+        error_log("No license type set for movie ID: $movieId");
+        die('Film nie ma przypisanego typu licencji.');
+    }
 
     // Pobierz cenę z tabeli Licencje na podstawie typu licencji
     $stmtLicense = $conn->prepare("SELECT cena FROM Licencje WHERE id = ?");
@@ -51,9 +63,12 @@
     $resultLicense = $stmtLicense->get_result();
 
     if (!$license = $resultLicense->fetch_assoc()) {
-        die('Typ licencji nie znaleziony.');
+        error_log("License type not found for ID: $licenseTypeId");
+        die('Typ licencji nie znaleziony. ID: ' . $licenseTypeId);
     }
+    
     $price = floatval($license['cena']);
+    error_log("License price: $price");
 
 
     $shopId             = intval(2139);

@@ -398,6 +398,11 @@ document.addEventListener('DOMContentLoaded', () => {
               if (purchaseButton) {
                 purchaseButton.addEventListener('click', () => {
                   console.log('💸 Purchase button clicked');
+                  
+                  // Get the actual database ID from the movie data
+                  const actualMovieId = movieData.id; // This is the database ID
+                  console.log('Using database movie ID:', actualMovieId);
+                  
                   // Create form and submit to startPaymentExample.php
                   const form = document.createElement('form');
                   form.action = 'startPaymentExample.php';
@@ -407,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   const movieIdInput = document.createElement('input');
                   movieIdInput.type = 'hidden';
                   movieIdInput.name = 'movieId';
-                  movieIdInput.value = movieId;
+                  movieIdInput.value = actualMovieId;
                   form.appendChild(movieIdInput);
 
                   document.body.appendChild(form);
